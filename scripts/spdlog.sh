@@ -2,19 +2,19 @@
 
 set -e
 
-VERSION=v1.14.1
+VERSION=v1.x
 
-curl -L https://github.com/gabime/spdlog/archive/refs/tags/v"$VERSION".tar.gz | tar -xz
+git clone --depth 1 --branch $VERSION https://github.com/gabime/spdlog spdlog
 
 mkdir build
 pushd build
 
-cmake ../spdlog-"$VERSION" \
+cmake ../spdlog \
     -DSPDLOG_ENABLE_PCH=ON \
     -DSPDLOG_BUILD_EXAMPLE=OFF \
     -DSPDLOG_USE_STD_FORMAT=ON \
     -DSPDLOG_DISABLE_DEFAULT_LOGGER=ON \
-    -DSPDLOG_EOL=\"\\x0A\" \
+    -DSPDLOG_EOL=\"\\n\" \
     $CMAKE_CONFIGURE_ARGS
 
 cmake --build . $CMAKE_BUILD_ARGS
@@ -22,4 +22,4 @@ cmake --install . $CMAKE_BUILD_ARGS
 
 popd
 
-license spdlog spdlog-"$VERSION"/LICENSE
+license spdlog spdlog/LICENSE
