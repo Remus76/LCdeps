@@ -1,0 +1,91 @@
+name: Build
+
+on: push
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  Build:
+    strategy:
+      max-parallel: 15
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: x86
+            env: Windows
+          - os: windows-latest
+            arch: x64
+            env: Windows
+
+    runs-on: ${{ matrix.os }}
+    env:
+      OS: ${{ matrix.env }}
+      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: "Setup Directories"
+        run: mkdir -p output output/lib output/include output/lc_licenses
+
+      - name: "Configure Arguments: Common"
+        run: |
+          echo "OUTPUT_DIR=$(pwd -W 2>/dev/null || pwd)/output" >> $GITHUB_ENV
+          platforms/common.sh
+
+      - name: "Configure Arguments: OS"
+        run: |
+          platforms/${{ matrix.env }}.sh
+
+      - name: "Configure Arguments: Architecture"
+        run: |
+          platforms/${{ matrix.env }}-${{ matrix.arch }}.sh
+
+      - name: "Set CMake paths"
+        run: |
+          echo "CMAKE_CONFIGURE_ARGS=$CMAKE_CONFIGURE_ARGS -DCMAKE_INSTALL_PREFIX=$OUTPUT_DIR -DCMAKE_PREFIX_PATH=$OUTPUT_DIR" >> $GITHUB_ENV
+          echo "MESON_CONFIGURE_ARGS=$MESON_CONFIGURE_ARGS --prefix $OUTPUT_DIR -Dlibdir=$OUTPUT_DIR/lib -Dbuildtype=release" >> $GITHUB_ENV
+
+      - name: "Setup VS Dev Environment"
+        if: ${{ matrix.env == 'Windows' }}
+        uses: seanmiddleditch/gha-setup-vsdevenv@v3
+        with:
+          arch: ${{ env.VS_ARCH }}
+
+      - name: Build spdlog
+        run: |
+          scripts/build.sh spdlog
+
+      - name: Remove bin
+        run: $CHROOT rm -rf output/bin
+
+      - name: Generate old_path.txt
+        run: |
+          echo "$OUTPUT_DIR" > $OUTPUT_DIR/old_path.txt
+
+      - name: Result
+        run: ls -R output
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.env }}-${{ matrix.arch }}
+          path: |
+            output/*
+
+      - name: Pack
+        if: ${{ env.IS_RELEASE == 'true' }}
+        run: |
+          cd output
+          tar -czf lc_deps-${{ matrix.env }}-${{ matrix.arch }}.tar.gz *
+
+      - name: Release
+        uses: ncipollo/release-action@v1.11.2
+        if: ${{ env.IS_RELEASE == 'true' }}
+        with:
+          artifacts: output/lc_deps-${{ matrix.env }}-${{ matrix.arch }}.tar.gz
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          replacesArtifacts: true
+          generateReleaseNotes: true
