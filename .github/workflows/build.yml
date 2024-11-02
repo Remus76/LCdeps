@@ -77,19 +77,3 @@ jobs:
           name: ${{ matrix.env }}-${{ matrix.arch }}
           path: |
             output/*
-
-      - name: Pack
-        if: ${{ env.IS_RELEASE == 'true' }}
-        run: |
-          cd output
-          tar -czf lc_deps-${{ matrix.env }}-${{ matrix.arch }}.tar.gz *
-
-      - name: Release
-        uses: ncipollo/release-action@v1.11.2
-        if: ${{ env.IS_RELEASE == 'true' }}
-        with:
-          artifacts: output/lc_deps-${{ matrix.env }}-${{ matrix.arch }}.tar.gz
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          replacesArtifacts: true
-          generateReleaseNotes: true
