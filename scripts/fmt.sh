@@ -11,6 +11,8 @@ mkdir build
 pushd build
 
 cmake "../fmt-$VERSION" \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebugDLL \
     -DFMT_DOC=OFF \
     -DFMT_TEST=OFF \
     $CMAKE_CONFIGURE_ARGS

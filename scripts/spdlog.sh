@@ -10,6 +10,8 @@ mkdir build
 pushd build
 
 cmake ../spdlog \
+    -DCMAKE_BUILD_TYPE=Debug \
+    -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebugDLL \
     -DSPDLOG_ENABLE_PCH=ON \
     -DSPDLOG_BUILD_EXAMPLE=OFF \
     -DSPDLOG_USE_STD_FORMAT=ON \
