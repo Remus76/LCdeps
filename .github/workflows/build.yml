@@ -27,9 +27,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       OS: ${{ matrix.env }}
-      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/') }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: "Setup Directories"
         run: mkdir -p output output/lib output/include output/lc_licenses
@@ -58,6 +57,10 @@ jobs:
         with:
           arch: ${{ env.VS_ARCH }}
 
+      - name: Build fmt
+        run: |
+          scripts/build.sh fmt
+
       - name: Build spdlog
         run: |
           scripts/build.sh spdlog
@@ -72,7 +75,7 @@ jobs:
       - name: Result
         run: ls -R output
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.env }}-${{ matrix.arch }}
           path: |
